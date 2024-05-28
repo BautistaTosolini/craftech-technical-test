@@ -73,16 +73,29 @@ La pipeline se divide en 4 stages:
 3. Push Docker Image to DockerHub: auto explicativo.
 4. Deploy Container: limpia los contenedores previos y crea uno con la imagen nueva. La aplicación se estará ejecutando en el puerto 3000.
 
-Para poder implementar esta pipeline se debe instalar previamente Java, Docker y Jenkins, luego agregar el usuario de jenkins al grupo de Docker.
+Para poder implementar esta pipeline se debe instalar previamente Java, Docker y Jenkins y seguir los siguientes pasos: 
+
+1. Agregar el usuario de jenkins al grupo de Docker.
 
 ```
 sudo usermod -aG docker jenkins
 ```
 
-Iniciar el servicio de jenkins, ingresar al puerto 8080 de la máquina host e iniciar sesión. Una vez dentro, instalar, además de los plugins recomendados, el plugin de Docker Pipeline para luego comenzar a crear dicha Pipeline.
+2. Iniciar el servicio de jenkins.
+```
+sudo systemctl start jenkins
+```
 
-A continuación se deben agregar las credentials de DockerHub para que la Pipeline pueda iniciar sesión en la plataforma y pushear la imagen.
+3. Ingresar al puerto 8080 de la máquina host e iniciar sesión. Una vez dentro, instalar, además de los plugins recomendados, el plugin de Docker Pipeline a través de Manage Jenkins > Plugins > Available Plugins > Docker Pipeline > Install.
 
-Al crear la Pipeline, seleccionar la opción de ``Github Project``, agregar el link del repo del proyecto, luego seleccionar ``GitHub hook trigger for GITScm polling``. Dentro del github, en la configuración del repositorio agregar un nuevo webhook con la dirección de jenkins en la máquina host de la siguiente manera: ``http://direcciónip:8080/github-webhook/``
+4. Agregar las credentials de DockerHub para que la Pipeline pueda iniciar sesión en la plataforma y pushear la imagen, esto se realiza mediante Perfil > Credentials > Dominio Global de Jenkins > Add Credentials > Agregar en el username el mail, la contraseña y en la id colocar "dockerhub-credentials".
 
-Finalmente en el apartado de pipeline, agregar la pipeline previamente mostrada.
+5. Crear la Pipeline al seleccionar la opción de New Job > Pipeline > ``Github Project``, agregar el link del repo del proyecto, luego seleccionar ``GitHub hook trigger for GITScm polling`` para que el job se triggeree cuando se pushee a la main branch.
+
+6. En el apartado de pipeline, agregar la pipeline previamente mostrada.
+
+7. Correr la pipeline por primera vez de manera manual con build now. (Cambiar los nombres de las variables enviroment según correspondan, principalmente el REPOSITORY_NAME)
+
+8. Dentro del github, en la configuración del repositorio agregar un nuevo webhook con la dirección de jenkins en la máquina host de la siguiente manera: ``http://dirección-ip-pública:8080/github-webhook/``
+
+Con todo eso realizado, el job de jenkins se triggerea automáticamente cada vez que se pushee un nuevo commit a la main branch y este job creará una imagen de docker con el nuevo código, lo pusheará a DockerHub y luego creará un container y lo ejecutará en el puerto 3000.
